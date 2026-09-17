@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## latest
 
+* Improved string argument errors to report the accepted types and received type, instead of only "Could not convert."
 * Fixed passing custom MPI communicators to the Participant https://github.com/precice/python-bindings/pull/256
 
 ## 3.4.0

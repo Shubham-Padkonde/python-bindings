@@ -1,4 +1,6 @@
 import precice
+from enum import Enum
+from pathlib import Path
 from unittest import TestCase
 import numpy as np
 from mpi4py import MPI
@@ -16,6 +18,35 @@ class TestBindings(TestCase):
     def test_constructor_custom_mpi_comm(self):
         participant = precice.Participant("test", "dummy.xml", 0, 1, MPI.COMM_WORLD)
         self.assertTrue(True)
+
+    def test_string_argument_type_errors(self):
+        """Rejected string arguments report supported and actual types (#175)."""
+
+        class ParticipantNames(Enum):
+            TEST = "test"
+
+        for value in (ParticipantNames.TEST, Path("dummy.xml"), 1, None):
+            for argument in ("participant", "configuration", "mesh"):
+                with self.subTest(value_type=type(value).__name__, argument=argument):
+                    with self.assertRaises(TypeError) as caught:
+                        if argument == "participant":
+                            precice.Participant(value, "dummy.xml", 0, 1)
+                        elif argument == "configuration":
+                            precice.Participant("test", value, 0, 1)
+                        else:
+                            participant = precice.Participant("test", "dummy.xml", 0, 1)
+                            participant.get_mesh_dimensions(value)
+                    self.assertIn("str or bytes", str(caught.exception))
+                    self.assertIn(type(value).__name__, str(caught.exception))
+
+    def test_string_and_bytes_arguments(self):
+        """String diagnostics do not change support for str and bytes arguments."""
+        for string_type in (str, bytes):
+            with self.subTest(string_type=string_type):
+                name = "test" if string_type is str else b"test"
+                config = "dummy.xml" if string_type is str else b"dummy.xml"
+                participant = precice.Participant(name, config, 0, 1)
+                self.assertEqual(participant.get_mesh_dimensions(name), 3)
 
     def test_version(self):
         precice.__version__

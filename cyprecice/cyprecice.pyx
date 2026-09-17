@@ -24,7 +24,7 @@ cdef bytes convert(s):
     elif type(s) is str:
         return s.encode()
     else:
-        raise TypeError("Could not convert.")
+        raise TypeError(f"Expected str or bytes, got {type(s).__name__}.")
 
 
 def check_array_like(argument, argument_name, function_name):
